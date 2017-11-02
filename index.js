@@ -1,14 +1,15 @@
 const _ = require('lodash');
 const path = require('path');
+const fx = require('mkdir-recursive');
 
 const preloader = require('./lib/preloader');
-const failover = require('./lib/failover');
-const images = require('./lib/images');
-const videos = require('./lib/videos');
-const fonts = require('./lib/fonts');
-const runtimeIncludes = require('./lib/runtimeIncludes');
-const miscAdFolders = require('./lib/miscAdFolders');
-const miscCommonFolders = require('./lib/miscCommonFolders');
+// const failover = require('./lib/failover');
+// const images = require('./lib/images');
+// const videos = require('./lib/videos');
+// const fonts = require('./lib/fonts');
+// const runtimeIncludes = require('./lib/runtimeIncludes');
+// const miscAdFolders = require('./lib/miscAdFolders');
+// const miscCommonFolders = require('./lib/miscCommonFolders');
 
 const debug = require('debug');
 var log = debug('copy-assets-plugin');
@@ -22,17 +23,17 @@ CopyAssetsPlugin.prototype.apply = function(compiler) {
 	var self = this;
 
 	compiler.plugin('emit', function(compilation, callback) {
-		self.settings = compilation.settings;
+		prepareDeploy(settings.deploy.paths);
 
 		var promises = [
-			preloader.copy(),
-			failover.copy(),
-			images.copy(),
-			videos.copy(),
-			fonts.copy(),
-			runtimeIncludes.copy(),
-			miscAdFolders.copy(),
-			miscCommonFolders.copy()
+			preloader.copy(compilation.settings),
+		// 	failover.copy(compilation),
+		// 	images.copy(compilation),
+		// 	videos.copy(compilation),
+		// 	fonts.copy(compilation),
+		// 	runtimeIncludes.copy(compilation),
+		// 	miscAdFolders.copy(compilation),
+		// 	miscCommonFolders.copy(compilation)
 		];
 		Promise.all(promises).then(() => {
 			compilation.settings = self.settings;
@@ -42,6 +43,10 @@ CopyAssetsPlugin.prototype.apply = function(compiler) {
 	});
 };
 
-
+function prepareDeploy(paths) {
+	if (!fs.existsSync(paths.context.deploy)) {
+		fx.mkdirSync(paths.context.deploy);
+	}
+}
 
 module.exports = CopyAssetsPlugin;
