@@ -1,0 +1,15 @@
+{
+  "name": "copy-assets-plugin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ff0000-ad-tech/copy-assets-plugin.git"
+  },
+  "author": "RED Interactive Agency",
+  "license": "ISC",
+}
