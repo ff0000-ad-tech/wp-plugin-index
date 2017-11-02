@@ -12,4 +12,8 @@
   },
   "author": "RED Interactive Agency",
   "license": "ISC",
+  "dependencies": {
+    "debug": "git://github.com/gmcdev/debug.git",
+    "lodash": "^4.17.4"
+  }
 }
