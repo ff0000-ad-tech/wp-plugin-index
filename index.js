@@ -1,15 +1,18 @@
-const _ = require('lodash');
-const path = require('path');
+const fs = require('fs');
 const fx = require('mkdir-recursive');
+const path = require('path');
+const _ = require('lodash');
 
-const preloader = require('./lib/preloader');
-// const failover = require('./lib/failover');
-// const images = require('./lib/images');
-// const videos = require('./lib/videos');
-// const fonts = require('./lib/fonts');
-// const runtimeIncludes = require('./lib/runtimeIncludes');
-// const miscAdFolders = require('./lib/miscAdFolders');
-// const miscCommonFolders = require('./lib/miscCommonFolders');
+const lib = {
+	preloader:  require('./lib/preloader'),
+	failover:  require('./lib/failover'),
+	images:  require('./lib/images'),
+	videos:  require('./lib/videos'),
+// fonts:  require('./lib/fonts'),
+// runtimeIncludes:  require('./lib/runtimeIncludes'),
+// miscAdFolders:  require('./lib/miscAdFolders'),
+// miscCommonFolders:  require('./lib/miscCommonFolders')
+};
 
 const debug = require('debug');
 var log = debug('copy-assets-plugin');
@@ -23,22 +26,25 @@ CopyAssetsPlugin.prototype.apply = function(compiler) {
 	var self = this;
 
 	compiler.plugin('emit', function(compilation, callback) {
-		prepareDeploy(settings.deploy.paths);
+		log('Preparing deploy folders');
+		prepareDeploy(compilation.settings.deploy.paths);
 
-		var promises = [
-			preloader.copy(compilation.settings),
-		// 	failover.copy(compilation),
-		// 	images.copy(compilation),
-		// 	videos.copy(compilation),
-		// 	fonts.copy(compilation),
-		// 	runtimeIncludes.copy(compilation),
-		// 	miscAdFolders.copy(compilation),
-		// 	miscCommonFolders.copy(compilation)
-		];
+		log('Copying assets:');
+		var promises = [];
+		for (var i in lib) {
+			promises.push(
+				lib[i].copy(compilation.settings)
+			);
+		}
+
+		// return to webpack flow
 		Promise.all(promises).then(() => {
+			log('complete');
 			compilation.settings = self.settings;
-			// return to webpack flow
 			callback();
+		})
+		.catch((err) => {
+			log(err);
 		});
 	});
 };

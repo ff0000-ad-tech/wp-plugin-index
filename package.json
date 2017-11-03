@@ -14,6 +14,9 @@
   "license": "ISC",
   "dependencies": {
     "debug": "git://github.com/gmcdev/debug.git",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "mkdir-recursive": "^0.3.0",
+    "ncp": "^2.0.0",
+    "walk": "^2.3.9"
   }
 }
