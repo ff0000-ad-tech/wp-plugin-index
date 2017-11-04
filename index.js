@@ -8,7 +8,7 @@ const lib = {
 	failover:  require('./lib/failover'),
 	images:  require('./lib/images'),
 	videos:  require('./lib/videos'),
-// fonts:  require('./lib/fonts'),
+	fonts:  require('./lib/fonts'),
 // runtimeIncludes:  require('./lib/runtimeIncludes'),
 // miscAdFolders:  require('./lib/miscAdFolders'),
 // miscCommonFolders:  require('./lib/miscCommonFolders')
@@ -23,24 +23,23 @@ function CopyAssetsPlugin(deploy) {
 
 
 CopyAssetsPlugin.prototype.apply = function(compiler) {
-	var self = this;
-
-	compiler.plugin('emit', function(compilation, callback) {
+	compiler.plugin('emit', (compilation, callback) => {
 		log('Preparing deploy folders');
-		prepareDeploy(compilation.settings.deploy.paths);
+		prepareDeploy(this.deploy);
 
 		log('Copying assets:');
 		var promises = [];
 		for (var i in lib) {
 			promises.push(
-				lib[i].copy(compilation.settings)
+				lib[i].copy(
+					compilation.settings, 
+					this.deploy
+				)
 			);
 		}
 
 		// return to webpack flow
 		Promise.all(promises).then(() => {
-			log('complete');
-			compilation.settings = self.settings;
 			callback();
 		})
 		.catch((err) => {
@@ -49,9 +48,9 @@ CopyAssetsPlugin.prototype.apply = function(compiler) {
 	});
 };
 
-function prepareDeploy(paths) {
-	if (!fs.existsSync(paths.context.deploy)) {
-		fx.mkdirSync(paths.context.deploy);
+function prepareDeploy(deploy) {
+	if (!fs.existsSync(deploy.context.deploy)) {
+		fx.mkdirSync(deploy.context.deploy);
 	}
 }
 
