@@ -9,16 +9,15 @@ const lib = {
 	images:  require('./lib/images'),
 	videos:  require('./lib/videos'),
 	fonts:  require('./lib/fonts'),
-	// runtimeIncludes:  require('./lib/runtimeIncludes'),
-// miscAdFolders:  require('./lib/miscAdFolders'),
-// miscCommonFolders:  require('./lib/miscCommonFolders')
+	runtimeIncludes:  require('./lib/runtime-includes')
 };
 
 const debug = require('debug');
 var log = debug('copy-assets-plugin');
 
-function CopyAssetsPlugin(deploy) {
+function CopyAssetsPlugin(deploy, exclude) {
 	this.deploy = deploy;
+	this.exclude = exclude;
 };
 
 
