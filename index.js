@@ -29,9 +29,20 @@ AssetsPlugin.prototype.apply = function(compiler) {
 			this.deploy
 		)
 		
-		// binary-pack acceptable assets
+		// TODO: add webpack-discovered binary assets for fba-payload
 		.then(() => {
-			log(compilation.assets);
+			compilation.modules.forEach((module) => {
+				if (module.rawRequest.match(/\.(png|jpg|gif|svg)$/)) {
+					log('Inlining -> ' + module.rawRequest + ' (TODO: pack asset in binary payload)');
+				}
+			});
+
+			// TODO: <img> and background-image declarations would have to be rewritten to payload blobs
+		})
+
+		// generate fba-payload
+		.then(() => {
+			log('TODO: generate fba-payload');
 		})
 
 		// return to webpack flow
