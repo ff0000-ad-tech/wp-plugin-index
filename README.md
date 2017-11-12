@@ -1,6 +1,6 @@
 ##### RED Interactive Agency - Ad Technology
 
-Assets Plugin (webpack)
+Webpack Plugin - Assets
 ===============
 
 This plugin relies on https://github.com/ff0000-ad-tech/parse-settings-plugin to generate a `settings` object on webpack's `compilation` object. 

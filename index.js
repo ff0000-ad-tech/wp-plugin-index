@@ -13,7 +13,7 @@ const copiers = {
 };
 
 const debug = require('debug');
-var log = debug('assets-plugin');
+var log = debug('wp-plugin-assets');
 
 function AssetsPlugin(deploy, exclude) {
 	this.deploy = deploy;
