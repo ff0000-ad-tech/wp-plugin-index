@@ -3,54 +3,74 @@ const fx = require('mkdir-recursive');
 const path = require('path');
 const _ = require('lodash');
 
-const lib = {
-	preloader:  require('./lib/preloader'),
-	failover:  require('./lib/failover'),
-	images:  require('./lib/images'),
-	videos:  require('./lib/videos'),
-	fonts:  require('./lib/fonts'),
-	runtimeIncludes:  require('./lib/runtime-includes')
+const copiers = {
+	preloader: require('./lib/copiers/preloader'),
+	failover: require('./lib/copiers/failover'),
+	images: require('./lib/copiers/images'),
+	videos: require('./lib/copiers/videos'),
+	fonts: require('./lib/copiers/fonts'),
+	runtimeIncludes: require('./lib/copiers/runtime-includes')
 };
 
 const debug = require('debug');
-var log = debug('copy-assets-plugin');
+var log = debug('assets-plugin');
 
-function CopyAssetsPlugin(deploy, exclude) {
+function AssetsPlugin(deploy, exclude) {
 	this.deploy = deploy;
 	this.exclude = exclude;
 };
 
 
-CopyAssetsPlugin.prototype.apply = function(compiler) {
+AssetsPlugin.prototype.apply = function(compiler) {
 	compiler.plugin('emit', (compilation, callback) => {
-		log('Preparing deploy folders');
-		prepareDeploy(this.deploy);
-
-		log('Copying assets:');
-		var promises = [];
-		for (var i in lib) {
-			promises.push(
-				lib[i].copy(
-					compilation.settings, 
-					this.deploy
-				)
-			);
-		}
+		// emit non-compiled assets to deploy
+		emitNonCompiledAssets(
+			compilation,
+			this.deploy
+		)
+		
+		// binary-pack acceptable assets
+		.then(() => {
+			log(compilation.assets);
+		})
 
 		// return to webpack flow
-		Promise.all(promises).then(() => {
+		.then(() => {
 			callback();
 		})
+
 		.catch((err) => {
 			log(err);
 		});
 	});
 };
 
+function emitNonCompiledAssets(compilation, deploy) {
+	return new Promise((resolve, reject) => {
+		log('Preparing deploy folders for non-compiled assets');
+		prepareDeploy(deploy);
+
+		var promises = [];
+		for (var i in copiers) {
+			promises.push(
+				copiers[i].copy(
+					compilation.settings, 
+					deploy
+				)
+			);
+		}
+		Promise.all(promises).then(() => {
+			resolve();
+		})
+		.catch((err) => {
+			log(err);
+		});
+	});
+}
 function prepareDeploy(deploy) {
 	if (!fs.existsSync(deploy.context.deploy)) {
 		fx.mkdirSync(deploy.context.deploy);
 	}
 }
 
-module.exports = CopyAssetsPlugin;
+module.exports = AssetsPlugin;
