@@ -56,6 +56,8 @@ AssetsPlugin.prototype.apply = function(compiler) {
 	});
 };
 
+
+
 function emitNonCompiledAssets(compilation, deploy) {
 	return new Promise((resolve, reject) => {
 		log('Preparing deploy folders for non-compiled assets');
@@ -64,10 +66,7 @@ function emitNonCompiledAssets(compilation, deploy) {
 		var promises = [];
 		for (var i in copiers) {
 			promises.push(
-				copiers[i].copy(
-					compilation.settings, 
-					deploy
-				)
+				copiers[i].copy(deploy)
 			);
 		}
 		Promise.all(promises).then(() => {
