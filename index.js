@@ -31,11 +31,13 @@ AssetsPlugin.prototype.apply = function(compiler) {
 		
 		// TODO: add webpack-discovered binary assets for fba-payload
 		.then(() => {
-			compilation.modules.forEach((module) => {
-				if (module.rawRequest.match(/\.(png|jpg|gif|svg)$/)) {
-					log('Inlining -> ' + module.rawRequest + ' (TODO: pack asset in binary payload)');
-				}
-			});
+			if(this.deploy.payload.recompile) {
+				log('HAS ASSETS TO COMPILE:');
+				this.deploy.payload.recompile = false;
+				this.deploy.payload.modules.forEach((module) => {
+					log(' ->', module.rawRequest);
+				});
+			}
 
 			// TODO: <img> and background-image declarations would have to be rewritten to payload blobs
 		})
