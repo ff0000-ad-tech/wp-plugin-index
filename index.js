@@ -80,8 +80,8 @@ function emitNonCompiledAssets(compilation, deploy) {
 	});
 }
 function prepareDeploy(deploy) {
-	if (!fs.existsSync(deploy.context.deploy)) {
-		fx.mkdirSync(deploy.context.deploy);
+	if (!fs.existsSync(deploy.env.context.deploy)) {
+		fx.mkdirSync(deploy.env.context.deploy);
 	}
 }
 
