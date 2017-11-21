@@ -1,20 +1,14 @@
 const fs = require('fs');
-const fx = require('mkdir-recursive');
 const path = require('path');
 const _ = require('lodash');
+const mkdirp = require('mkdirp');
 
-// const copiers = {
-// 	preloader: require('./lib/copiers/preloader'),
-// 	failover: require('./lib/copiers/failover'),
-// 	images: require('./lib/copiers/images'),
-// //	videos: require('./lib/copiers/videos'),
-// 	fonts: require('./lib/copiers/fonts'),
-// 	runtimeIncludes: require('./lib/copiers/runtime-includes')
-// };
+
 const copier = require('./lib/copier.js');
 
 const debug = require('debug');
 var log = debug('wp-plugin-assets');
+
 
 function AssetsPlugin(deploy, options) {
 	this.deploy = deploy;
@@ -72,13 +66,16 @@ AssetsPlugin.prototype.emitNonCompiledAssets = function(compilation) {
 
 		// run copiers
 		var promises = [];
-		for (var i in this.options.assets) {
-			promises.push(
-				copier.copy(
-					this.deploy, 
-					this.options.assets[i]
-				)
-			);
+		for (var key in this.options.assets) {
+			if (!this.options.assets[key].disable) {
+				log(` - ${key}`);
+				promises.push(
+					copier.copy(
+						this.deploy, 
+						this.options.assets[key]
+					)
+				);
+			}
 		}
 		Promise.all(promises).then(() => {
 			resolve();
@@ -90,7 +87,7 @@ AssetsPlugin.prototype.emitNonCompiledAssets = function(compilation) {
 }
 function prepareDeploy(deploy) {
 	if (!fs.existsSync(deploy.env.context.deploy)) {
-		fx.mkdirSync(deploy.env.context.deploy);
+		mkdirp.sync(deploy.env.context.deploy);
 	}
 }
 
