@@ -28,11 +28,13 @@ AssetsPlugin.prototype.apply = function(compiler) {
 		
 		// TODO: add webpack-discovered binary assets for fba-payload
 		.then(() => {
-			if(this.deploy.payload.recompile) {
+			if(this.deploy.payload.image.recompile || this.deploy.payload.font.recompile) {
 				log('HAS ASSETS TO COMPILE:');
-				this.deploy.payload.recompile = false;
-				this.deploy.payload.modules.forEach((module) => {
-					log(' ->', module.rawRequest);
+				this.deploy.payload.image.recompile = false;
+				this.deploy.payload.font.recompile = false;
+				const compileModules = this.deploy.payload.image.modules.concat(this.deploy.payload.font.modules)
+				compileModules.forEach((compileModule) => {
+					log(' ->', compileModule.rawRequest);
 				});
 			}
 
