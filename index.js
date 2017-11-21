@@ -3,28 +3,31 @@ const fx = require('mkdir-recursive');
 const path = require('path');
 const _ = require('lodash');
 
-const copiers = {
-	preloader: require('./lib/copiers/preloader'),
-	failover: require('./lib/copiers/failover'),
-	images: require('./lib/copiers/images'),
-	videos: require('./lib/copiers/videos'),
-	fonts: require('./lib/copiers/fonts'),
-	runtimeIncludes: require('./lib/copiers/runtime-includes')
-};
+// const copiers = {
+// 	preloader: require('./lib/copiers/preloader'),
+// 	failover: require('./lib/copiers/failover'),
+// 	images: require('./lib/copiers/images'),
+// //	videos: require('./lib/copiers/videos'),
+// 	fonts: require('./lib/copiers/fonts'),
+// 	runtimeIncludes: require('./lib/copiers/runtime-includes')
+// };
+const copier = require('./lib/copier.js');
 
 const debug = require('debug');
 var log = debug('wp-plugin-assets');
 
-function AssetsPlugin(deploy, exclude) {
+function AssetsPlugin(deploy, options) {
 	this.deploy = deploy;
-	this.exclude = exclude;
+	this.options = options;
 };
 
 
 AssetsPlugin.prototype.apply = function(compiler) {
 	compiler.plugin('emit', (compilation, callback) => {
+		log(this.options);
+
 		// emit non-compiled assets to deploy
-		emitNonCompiledAssets(
+		this.emitNonCompiledAssets(
 			compilation,
 			this.deploy
 		)
@@ -60,15 +63,21 @@ AssetsPlugin.prototype.apply = function(compiler) {
 
 
 
-function emitNonCompiledAssets(compilation, deploy) {
+AssetsPlugin.prototype.emitNonCompiledAssets = function(compilation) {
 	return new Promise((resolve, reject) => {
-		log('Preparing deploy folders for non-compiled assets');
-		prepareDeploy(deploy);
+		log('Emitting non-compiled assets...');
 
+		// prepare destination folders
+		prepareDeploy(this.deploy);
+
+		// run copiers
 		var promises = [];
-		for (var i in copiers) {
+		for (var i in this.options.assets) {
 			promises.push(
-				copiers[i].copy(deploy)
+				copier.copy(
+					this.deploy, 
+					this.options.assets[i]
+				)
 			);
 		}
 		Promise.all(promises).then(() => {
