@@ -56,8 +56,7 @@ AssetsPlugin.prototype.apply = function(compiler) {
 					asset.payload.modules.forEach((mod) => {
 						fbaAssets.push({
 							chunkType: asset.payload.chunkType,
-							data: mod.rawRequest,
-							to: asset.to
+							path: mod.userRequest
 						});
 					});
 				}
@@ -65,26 +64,21 @@ AssetsPlugin.prototype.apply = function(compiler) {
 			// otherwise copy the asset to deploy
 			else {
 				promises.push(
-					copier.copy(
-						this.deploy, 
-						this.options.assets[key]
-					)
+					copier.copy(asset)
 				);				
 			}
 		});
 		// TODO: have this be part of the promise-chain
-		fbaCompiler.compile(
-			this.deploy.output.fba,
-			fbaAssets
+		promises.push(
+			fbaCompiler.compile({
+				target: `${this.deploy.output.fba.path}/${this.deploy.output.fba.filename}`,
+				assets: fbaAssets
+			})
 		);
 		// TODO: <img> and background-image declarations would have to be rewritten to payload blobs
 
-
-		Promise.all(promises).then(() => {
-			resolve();
-		})
 		// return to webpack flow
-		.then(() => {
+		Promise.all(promises).then(() => {
 			callback();
 		})
 		.catch((err) => {
