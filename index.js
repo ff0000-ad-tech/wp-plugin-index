@@ -10,68 +10,74 @@ const debug = require('debug');
 var log = debug('wp-plugin-assets');
 
 
-function AssetsPlugin(deploy, options) {
-	this.deploy = deploy;
-	this.options = options;
+function AssetsPlugin(DM, assets) {
+	this.DM = DM;
+	this.assets = assets;
 	/** TODO 
 			Document `this.options`:
 
-			this.options = {
-				assets: [
-					{
-						sources: [
-							list of asset paths
-						],
+			this.assets = [
+				{
+					payload: [
+						// payload objects (see wp-plugin-payload)
+						{
+							modules: [] // subpaths to file locations
+						}
+					],
+					copy: {
 						from: './source-context',
-						to: './destination-context',
-						// output from wp-plugin-payload 
-						payload: {
-							recompile: true/false,
-							modules: [
-								Webpack modules to compile
-							]
-						},
-						disable: true/false (switch to stop this asset-group from processing, either copying or compiling)
+						to: './destination-context'	
 					}
-				]
-			}
+				}
+			]
 	*/
 }
 
 
 AssetsPlugin.prototype.apply = function(compiler) {
 	compiler.plugin('emit', (compilation, callback) => {
-		log(this.options);
-
 		// prepare destination folders
-		prepareDeploy(this.deploy);
+		prepareDeploy(this.DM);
 
 		var promises = [];
+		var payloadOutput = this.DM.payload.get().output;
 		var fbaAssets = [];
 		// iterate assets
-		this.options.assets.forEach((asset) => {
-			// fba-compile if asset has payload representation, and it is not disabled
-			if (asset.payload && !asset.payload.disabled) {
-				if (asset.payload.type == 'fba') {
-					asset.payload.modules.forEach((mod) => {
-						fbaAssets.push({
-							chunkType: asset.payload.chunkType,
-							path: mod.userRequest
-						});
+		for (var i in this.assets) {
+			const payload = this.assets[i].payload();
+			payload.type = payload.type || 'copy';
+			
+			// if payload type is an fba chunk-type
+			if (payload.type.match(/^fbA/i)) {
+				// append content to fba-compiler
+				payload.modules.forEach((module) => {
+					log(' --->', module.userRequest);
+					fbaAssets.push({
+						chunkType: payload.type,
+						path: module.userRequest
 					});
-				}
+				});
 			}
-			// otherwise copy the asset to deploy
+
+			// if payload type is inline
+			else if (payload.type == 'inline') {}
+
+			// if payload type is copy
 			else {
+				// copy the asset to deploy
 				promises.push(
-					copier.copy(asset)
+					copier.copy(
+						payload.modules, 
+						this.assets[i].copy
+					)
 				);				
 			}
-		});
-		// TODO: have this be part of the promise-chain
+		}
+
+		// compile all the assets
 		promises.push(
 			fbaCompiler.compile({
-				target: `${this.deploy.output.fba.path}/${this.deploy.output.fba.filename}`,
+				target: `${payloadOutput.path}/${payloadOutput.filename}`,
 				assets: fbaAssets
 			})
 		);
@@ -89,9 +95,10 @@ AssetsPlugin.prototype.apply = function(compiler) {
 
 
 
-function prepareDeploy(deploy) {
-	if (!fs.existsSync(deploy.env.context.deploy)) {
-		mkdirp.sync(deploy.env.context.deploy);
+function prepareDeploy(DM) {
+	const adEnv = DM.ad.get().env;
+	if (!fs.existsSync(adEnv.context.deploy)) {
+		mkdirp.sync(adEnv.context.deploy);
 	}
 }
 
