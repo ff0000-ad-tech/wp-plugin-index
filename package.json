@@ -1,5 +1,5 @@
 {
-  "name": "wp-plugin-assets",
+  "name": "wp-plugin-index",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,16 +8,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ff0000-ad-tech/wp-plugin-assets.git"
+    "url": "git+https://github.com/ff0000-ad-tech/wp-plugin-index.git"
   },
   "author": "RED Interactive Agency",
   "license": "ISC",
   "dependencies": {
-    "debug": "git://github.com/gmcdev/debug.git",
-    "fba-compiler": "git://github.com/ff0000-ad-tech/fba-compiler.git",
-    "lodash": "^4.17.4",
-    "mkdir-recursive": "^0.3.0",
-    "ncp": "^2.0.0",
-    "walk": "^2.3.9"
+    "debug": "git://github.com/gmcdev/debug.git"
   }
 }
