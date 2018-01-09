@@ -4,13 +4,14 @@ const path = require('path')
 const hooksRegex = require('hooks-regex')
 
 const debug = require('debug')
+const promisePolyfillPath = './node_modules/promise-polyfill/dist/polyfill.min.js'
 var log = debug('wp-plugin-index')
 
 function IndexPlugin(DM, options) {
 	this.DM = DM
 	this.options = options
 
-	this.updates = [adParams, assets, environments, inline, initial]
+	this.updates = [adParams, assets, environments, promisePolyfill, inline, initial]
 }
 
 /** -- WEBPACK ----
@@ -79,6 +80,13 @@ function environments(DM, source) {
 	)
 	return source
 }
+
+function promisePolyfill(DM, source) {
+	log('Add Promise polyfill')
+	source = source.replace(hooksRegex.get('Red', 'Component', 'promise_polyfill'), loadSource(promisePolyfillPath))
+	return source
+}
+
 function inline(DM, source, compilation) {
 	log('Updating inline')
 	source = source.replace(hooksRegex.get('Red', 'Component', 'inline_entry'), compilation.assets['inline.bundle.js'].source())
