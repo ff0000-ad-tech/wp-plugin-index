@@ -4,14 +4,13 @@ const path = require('path')
 const hooksRegex = require('hooks-regex')
 
 const debug = require('debug')
-const promisePolyfillPath = './node_modules/promise-polyfill/dist/polyfill.min.js'
 var log = debug('wp-plugin-index')
 
 function IndexPlugin(DM, options) {
 	this.DM = DM
 	this.options = options
 
-	this.updates = [adParams, assets, environments, promisePolyfill, inline, initial]
+	this.updates = [adParams, assets, environments, inline, initial]
 }
 
 /** -- WEBPACK ----
@@ -24,6 +23,12 @@ IndexPlugin.prototype.apply = function(compiler) {
 	compiler.plugin('emit', (compilation, callback) => {
 		// load index
 		var source = loadSource(this.options.source.path)
+		
+		// apply injections
+		Object.keys(self.options.inject).forEach((name) => {
+			const path = self.options.inject[name]
+			source = inject(name, path, source)
+		})
 
 		// apply all updates
 		source = self.updates.reduce((source, update) => {
@@ -48,6 +53,18 @@ function loadSource(path) {
 }
 function writeOutput(path, source) {
 	fs.writeFileSync(path, source)
+}
+
+/** -- Inject ----
+ * 
+ * 
+ */
+function inject(name, path, source) {
+	log(`Injecting - ${name}`)
+	const content = loadSource(path)
+	const tag = `<script type="text/javascript">${content}</script>\n`
+	source = source.replace(hooksRegex.get('Red', 'Inject', name), tag)
+	return source
 }
 
 /** -- UPDATERS ----
@@ -81,17 +98,12 @@ function environments(DM, source) {
 	return source
 }
 
-function promisePolyfill(DM, source) {
-	log('Add Promise polyfill')
-	source = source.replace(hooksRegex.get('Red', 'Component', 'promise_polyfill'), loadSource(promisePolyfillPath))
-	return source
-}
-
 function inline(DM, source, compilation) {
 	log('Updating inline')
 	source = source.replace(hooksRegex.get('Red', 'Component', 'inline_entry'), compilation.assets['inline.bundle.js'].source())
 	return source
 }
+
 function initial(DM, source, compilation) {
 	log('Updating initial')
 	source = source.replace(hooksRegex.get('Red', 'Component', 'initial_entry'), compilation.assets['initial.bundle.js'].source())
