@@ -6,9 +6,13 @@ const hooksRegex = require('hooks-regex')
 const debug = require('debug')
 var log = debug('wp-plugin-index')
 
+const defaultOptions = {
+	inject: {}
+}
+
 function IndexPlugin(DM, options) {
 	this.DM = DM
-	this.options = options
+	this.options = Object.assign(defaultOptions, options)
 
 	this.updates = [adParams, assets, environments, inline, initial]
 }
