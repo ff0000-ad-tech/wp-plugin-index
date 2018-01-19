@@ -101,15 +101,16 @@ function environments(DM, source) {
 	return source
 }
 
+// passing in function as 2nd argument to prevent default "$n" escaping
 function inline(DM, source, compilation) {
 	log('Updating inline')
-	source = source.replace(hooksRegex.get('Red', 'Component', 'inline_entry'), compilation.assets['inline.bundle.js'].source())
+	source = source.replace(hooksRegex.get('Red', 'Component', 'inline_entry'), () => compilation.assets['inline.bundle.js'].source())
 	return source
 }
 
 function initial(DM, source, compilation) {
 	log('Updating initial')
-	source = source.replace(hooksRegex.get('Red', 'Component', 'initial_entry'), compilation.assets['initial.bundle.js'].source())
+	source = source.replace(hooksRegex.get('Red', 'Component', 'initial_entry'), () => compilation.assets['initial.bundle.js'].source())
 	return source
 }
 
