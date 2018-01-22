@@ -66,7 +66,7 @@ function writeOutput(path, source) {
 function inject(name, path, source) {
 	log(`Injecting - ${name}`)
 	const content = loadSource(path)
-	source = source.replace(hooksRegex.get('Red', 'Inject', name), content)
+	source = source.replace(hooksRegex.get('Red', 'Inject', name), () => content)
 	return source
 }
 
