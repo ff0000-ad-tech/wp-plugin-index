@@ -27,9 +27,9 @@ IndexPlugin.prototype.apply = function(compiler) {
 	compiler.plugin('emit', (compilation, callback) => {
 		// load index
 		var source = loadSource(this.options.source.path)
-		
+
 		// apply injections
-		Object.keys(self.options.inject).forEach((name) => {
+		Object.keys(self.options.inject).forEach(name => {
 			const path = self.options.inject[name]
 			source = inject(name, path, source)
 		})
@@ -60,8 +60,8 @@ function writeOutput(path, source) {
 }
 
 /** -- Inject ----
- * 
- * 
+ *
+ *
  */
 function inject(name, path, source) {
 	log(`Injecting - ${name}`)
@@ -104,13 +104,13 @@ function environments(DM, source) {
 // passing in function as 2nd argument to prevent default "$n" escaping
 function inline(DM, source, compilation) {
 	log('Updating inline')
-	source = source.replace(hooksRegex.get('Red', 'Component', 'inline_entry'), () => compilation.assets['inline.bundle.js'].source())
+	source = source.replace(hooksRegex.get('Red', 'Inject', 'inline_entry'), () => compilation.assets['inline.bundle.js'].source())
 	return source
 }
 
 function initial(DM, source, compilation) {
 	log('Updating initial')
-	source = source.replace(hooksRegex.get('Red', 'Component', 'initial_entry'), () => compilation.assets['initial.bundle.js'].source())
+	source = source.replace(hooksRegex.get('Red', 'Inject', 'initial_entry'), () => compilation.assets['initial.bundle.js'].source())
 	return source
 }
 
