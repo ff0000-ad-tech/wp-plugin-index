@@ -46,6 +46,13 @@ IndexPlugin.prototype.apply = function(compiler) {
 
 		callback()
 	})
+
+  // add index.html to watchlist
+	compiler.plugin('after-compile', (compilation, callback) => {
+		const indexPath = path.resolve(self.options.source.path)
+		compilation.fileDependencies.push(indexPath)
+		callback()
+	})
 }
 
 /** -- IO ----
