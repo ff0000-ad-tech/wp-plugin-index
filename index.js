@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const hooksRegex = require('hooks-regex')
+const hooksRegex = require('@ff0000-ad-tech/hooks-regex')
 
 const debug = require('debug')
 var log = debug('wp-plugin-index')
