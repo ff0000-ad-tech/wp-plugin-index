@@ -15,6 +15,7 @@ function IndexPlugin(DM, options) {
 	this.options = Object.assign(defaultOptions, options)
 
 	this.updates = [adParams, assets, environments, inline, initial]
+	this.output
 }
 
 /** -- WEBPACK ----
@@ -24,33 +25,37 @@ function IndexPlugin(DM, options) {
 IndexPlugin.prototype.apply = function(compiler) {
 	const self = this
 
+	// add index.html to watchlist
+	compiler.plugin('after-compile', (compilation, callback) => {
+		const indexPath = path.resolve(self.options.source.path)
+		compilation.fileDependencies.push(indexPath)
+		callback()
+	})
+
+	// inject & update index
 	compiler.plugin('emit', (compilation, callback) => {
 		// load index
-		var source = loadSource(this.options.source.path)
+		this.output = loadSource(this.options.source.path)
 
 		// apply injections
 		Object.keys(self.options.inject).forEach(name => {
 			const path = self.options.inject[name]
-			source = inject(name, path, source)
+			this.output = inject(name, path, this.output)
 		})
 
 		// apply all updates
-		source = self.updates.reduce((source, update) => {
-			return update(self.DM, source, compilation)
-		}, source)
-
-		// write output
-		log(`Emitting -> ${this.options.output.path}`)
-		log(this.DM.ad.get().settings.ref)
-		writeOutput(this.options.output.path, source)
+		this.output = self.updates.reduce((output, update) => {
+			return update(self.DM, output, compilation)
+		}, this.output)
 
 		callback()
 	})
 
-  // add index.html to watchlist
-	compiler.plugin('after-compile', (compilation, callback) => {
-		const indexPath = path.resolve(self.options.source.path)
-		compilation.fileDependencies.push(indexPath)
+	// write index
+	compiler.plugin('after-emit', (compilation, callback) => {
+		log(`Emitting -> ${this.options.output.path}`)
+		log(this.DM.ad.get().settings.ref)
+		writeOutput(this.options.output.path, this.output)
 		callback()
 	})
 }
