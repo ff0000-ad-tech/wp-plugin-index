@@ -30,7 +30,7 @@ IndexPlugin.prototype.apply = function(compiler) {
 	// add index.html to watchlist
 	compiler.hooks.afterCompile.tapAsync(pluginName, (compilation, callback) => {
 		const indexPath = path.resolve(self.options.source.path)
-		compilation.fileDependencies.push(indexPath)
+		compilation.fileDependencies.add(indexPath)
 		callback()
 	})
 
