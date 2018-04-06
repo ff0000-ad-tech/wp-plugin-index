@@ -25,15 +25,17 @@ function IndexPlugin(DM, options) {
 IndexPlugin.prototype.apply = function(compiler) {
 	const self = this
 
+	const pluginName = 'FAT Index Plugin'
+
 	// add index.html to watchlist
-	compiler.plugin('after-compile', (compilation, callback) => {
+	compiler.hooks.afterCompile.tapAsync(pluginName, (compilation, callback) => {
 		const indexPath = path.resolve(self.options.source.path)
 		compilation.fileDependencies.push(indexPath)
 		callback()
 	})
 
 	// inject & update index
-	compiler.plugin('emit', (compilation, callback) => {
+	compiler.hooks.emit.tapAsync(pluginName, (compilation, callback) => {
 		// load index
 		this.output = loadSource(this.options.source.path)
 
@@ -52,7 +54,7 @@ IndexPlugin.prototype.apply = function(compiler) {
 	})
 
 	// write index
-	compiler.plugin('after-emit', (compilation, callback) => {
+	compiler.hooks.afterEmit.tapAsync(pluginName, (compilation, callback) => {
 		log(`Emitting -> ${this.options.output.path}`)
 		log(this.DM.ad.get().settings.ref)
 		writeOutput(this.options.output.path, this.output)
