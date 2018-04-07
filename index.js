@@ -6,6 +6,8 @@ const hooksRegex = require('@ff0000-ad-tech/hooks-regex')
 const debug = require('debug')
 var log = debug('wp-plugin-index')
 
+const pluginName = 'FAT Index Plugin'
+
 const defaultOptions = {
 	inject: {}
 }
@@ -24,8 +26,6 @@ function IndexPlugin(DM, options) {
  */
 IndexPlugin.prototype.apply = function(compiler) {
 	const self = this
-
-	const pluginName = 'FAT Index Plugin'
 
 	// add index.html to watchlist
 	compiler.hooks.afterCompile.tapAsync(pluginName, (compilation, callback) => {
