@@ -49,9 +49,7 @@ IndexPlugin.prototype.apply = function(compiler) {
 		}, this.output)
 
 		// apply all requesters
-		getRequesters(this.output).reduce((output, requester) => {
-			return fulfillRequester(output, requester)
-		}, this.output)
+		this.output = fulfillRequesters(this.output, path.dirname(this.options.source.path))
 
 		callback()
 	})
@@ -135,20 +133,27 @@ function initial(DM, source, compilation) {
  *
  *	Requesters are Red Hooks that request injection of a specific file.
  */
-function getRequesters(source) {
+function getRequester(source) {
 	const regex = hooksRegex.get('Red', 'Requester', '*')
-	let match
-	let requesters = []
-	while ((match = regex.exec(source))) {
-		requesters.push({
-			param: match.param,
-			request: match.content
-		})
-	}
-	return requesters
+	return regex.exec(source)
 }
-function fulfillRequester(source, requester) {
-	log(requester)
+
+function loadRequesterContent(requester, context) {
+	const contentMatch = requester.groups.content.match(/inject[\s\(\'\"]{2,}([^\'\"]+)/)
+	try {
+		return loadSource(path.resolve(context, contentMatch[1]))
+	} catch (err) {
+		log(`Unable to load Requester: ${requester.groups.content}:\n${err}`)
+		return ''
+	}
+}
+function fulfillRequesters(source, context) {
+	let requester
+	while ((requester = getRequester(source))) {
+		const content = loadRequesterContent(requester, context)
+		source = source.replace(hooksRegex.get('Red', 'Requester', requester.groups.param), content)
+	}
+	return source
 }
 
 module.exports = IndexPlugin
