@@ -48,6 +48,11 @@ IndexPlugin.prototype.apply = function(compiler) {
 			return update(self.DM, output, compilation)
 		}, this.output)
 
+		// apply all requesters
+		getRequesters(this.output).reduce((output, requester) => {
+			return fulfillRequester(output, requester)
+		}, this.output)
+
 		callback()
 	})
 
@@ -124,6 +129,26 @@ function initial(DM, source, compilation) {
 	log('Updating initial')
 	source = source.replace(hooksRegex.get('Red', 'Inject', 'initial_entry'), () => compilation.assets['initial.bundle.js'].source())
 	return source
+}
+
+/** -- REQUESTERS ----
+ *
+ *	Requesters are Red Hooks that request injection of a specific file.
+ */
+function getRequesters(source) {
+	const regex = hooksRegex.get('Red', 'Requester', '*')
+	let match
+	let requesters = []
+	while ((match = regex.exec(source))) {
+		requesters.push({
+			param: match.param,
+			request: match.content
+		})
+	}
+	return requesters
+}
+function fulfillRequester(source, requester) {
+	log(requester)
 }
 
 module.exports = IndexPlugin
