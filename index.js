@@ -43,7 +43,8 @@ IndexPlugin.prototype.apply = function(compiler) {
 			.then(() => {
 				// apply injections
 				log('Applying Injections:')
-				return fulfillInjections(self.options.inject, this.output).then(output => {
+				const injections = Object.assign({}, self.options.inject)
+				return fulfillInjections(injections, this.output).then(output => {
 					this.output = output
 				})
 			})
@@ -62,7 +63,6 @@ IndexPlugin.prototype.apply = function(compiler) {
 				})
 			})
 			.then(() => {
-				log('CALLBACK TO WEBPACK...')
 				callback()
 			})
 			.catch(err => {
