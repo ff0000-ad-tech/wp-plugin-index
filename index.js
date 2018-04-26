@@ -1,5 +1,7 @@
 const fs = require('fs')
 const path = require('path')
+const request = require('request')
+const promiseSerial = require('promise-serial')
 
 const hooksRegex = require('@ff0000-ad-tech/hooks-regex')
 
@@ -35,23 +37,51 @@ IndexPlugin.prototype.apply = function(compiler) {
 	// inject & update index
 	compiler.plugin('emit', (compilation, callback) => {
 		// load index
-		this.output = loadSource(this.options.source.path)
-
-		// apply injections
-		Object.keys(self.options.inject).forEach(name => {
-			const path = self.options.inject[name]
-			this.output = inject(name, path, this.output)
-		})
-
-		// apply all updates
-		this.output = self.updates.reduce((output, update) => {
-			return update(self.DM, output, compilation)
-		}, this.output)
-
-		// apply all requesters
-		this.output = fulfillRequesters(this.output, path.dirname(this.options.source.path))
-
-		callback()
+		loadSource(this.options.source.path)
+			.then(output => {
+				this.output = output
+			})
+			.then(() => {
+				// apply injections
+				return new Promise((resolve, reject) => {
+					let promises = []
+					Object.keys(self.options.inject).forEach(name => {
+						;(name => {
+							promises.push(() => {
+								const path = self.options.inject[name]
+								return inject(name, path, this.output).then(output => {
+									this.output = output
+								})
+							})
+						})(name)
+					})
+					promiseSerial(promises)
+						.then(() => {
+							resolve()
+						})
+						.catch(err => {
+							reject(err)
+						})
+				})
+			})
+			.then(() => {
+				// apply all updates
+				this.output = self.updates.reduce((output, update) => {
+					return update(self.DM, output, compilation)
+				}, this.output)
+			})
+			.then(() => {
+				// apply all requesters
+				return fulfillRequesters(this.output, path.dirname(this.options.source.path)).then(output => {
+					this.output = output
+				})
+			})
+			.then(() => {
+				callback()
+			})
+			.catch(err => {
+				throw err
+			})
 	})
 
 	// write index
@@ -68,7 +98,25 @@ IndexPlugin.prototype.apply = function(compiler) {
  *
  */
 function loadSource(path) {
-	return fs.readFileSync(path, 'utf8')
+	return new Promise((resolve, reject) => {
+		if (path.indexOf('http') > -1) {
+			// request from internet
+			request.get('https://ae.nflximg.net/monet/scripts/custom-element.js', (err, res) => {
+				if (err) {
+					return reject(err)
+				}
+				resolve(res)
+			})
+		} else {
+			// load from filesystem
+			fs.readFile(path, 'utf8', (err, data) => {
+				if (err) {
+					return reject(err)
+				}
+				resolve(data)
+			})
+		}
+	})
 }
 function writeOutput(path, source) {
 	fs.writeFileSync(path, source)
@@ -80,9 +128,15 @@ function writeOutput(path, source) {
  */
 function inject(name, path, source) {
 	log(`Injecting - ${name}`)
-	const content = loadSource(path)
-	source = source.replace(hooksRegex.get('Red', 'Inject', name), () => content)
-	return source
+	return new Promise()
+	loadSource(path)
+		.then(content => {
+			source = source.replace(hooksRegex.get('Red', 'Inject', name), () => content)
+			resolve(source)
+		})
+		.catch(err => {
+			throw err
+		})
 }
 
 /** -- UPDATERS ----
@@ -139,21 +193,38 @@ function getRequester(source) {
 }
 
 function loadRequesterContent(requester, context) {
-	const contentMatch = requester.groups.content.match(/inject[\s\(\'\"]{2,}([^\'\"]+)/)
-	try {
-		return loadSource(path.resolve(context, contentMatch[1]))
-	} catch (err) {
-		log(`Unable to load Requester: ${requester.groups.content}:\n${err}`)
-		return ''
-	}
+	return new Promise((resolve, reject) => {
+		const contentMatch = requester.groups.content.match(/inject[\s\(\'\"]{2,}([^\'\"]+)/)
+		loadSource(path.resolve(context, contentMatch[1]))
+			.then(content => {
+				resolve(content)
+			})
+			.catch(err => {
+				log(`Unable to load Requester: ${requester.groups.content}:\n${err}`)
+				reject(err)
+			})
+	})
 }
 function fulfillRequesters(source, context) {
-	let requester
-	while ((requester = getRequester(source))) {
-		const content = loadRequesterContent(requester, context)
-		source = source.replace(hooksRegex.get('Red', 'Requester', requester.groups.param), content)
-	}
-	return source
+	return new Promise((resolve, reject) => {
+		let promises = []
+		let requester
+		while ((requester = getRequester(source))) {
+			;((requester, source) => {
+				promises.push(
+					loadRequesterContent(requester, context).then(content => {
+						source = source.replace(hooksRegex.get('Red', 'Requester', requester.groups.param), content)
+						return Promise.resolve()
+					})
+				)
+			})(requester, source)
+		}
+		Promise.all(promises)
+			.then(() => {
+				resolve(source)
+			})
+			.catch(err => reject(err))
+	})
 }
 
 module.exports = IndexPlugin
