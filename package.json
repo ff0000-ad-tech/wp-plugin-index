@@ -18,7 +18,6 @@
 	"dependencies": {
 		"@ff0000-ad-tech/debug": "latest",
 		"@ff0000-ad-tech/hooks-regex": "latest",
-		"promise-serial": "^0.1.5",
 		"request": "^2.85.0"
 	},
 	"devDependencies": {
