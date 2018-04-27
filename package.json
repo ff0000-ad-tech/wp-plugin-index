@@ -17,7 +17,8 @@
 	"license": "MIT",
 	"dependencies": {
 		"@ff0000-ad-tech/debug": "latest",
-		"@ff0000-ad-tech/hooks-regex": "latest"
+		"@ff0000-ad-tech/hooks-regex": "latest",
+		"request": "^2.85.0"
 	},
 	"devDependencies": {
 		"babel-eslint": "^8.2.2",
