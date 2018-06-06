@@ -142,7 +142,8 @@ function inject(name, path, source) {
 			return source.replace(hooksRegex.get('Red', 'Inject', name), () => content)
 		})
 		.catch(err => {
-			return err
+			log(`Unable to find Red Hook "Red.Inject.${name}"`)
+			return source
 		})
 }
 
