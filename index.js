@@ -49,11 +49,13 @@ IndexPlugin.prototype.apply = function(compiler) {
 				})
 			})
 			.then(() => {
-				log('Applying Settings Updates:')
-				// apply all updates
-				this.output = self.updates.reduce((output, update) => {
-					return update(self.DM, output, compilation)
-				}, this.output)
+				if (this.DM) {
+					log('Applying Settings Updates:')
+					// apply all updates
+					this.output = self.updates.reduce((output, update) => {
+						return update(self.DM, output, compilation)
+					}, this.output)
+				}
 			})
 			.then(() => {
 				log('Applying Requesters:')
@@ -74,7 +76,9 @@ IndexPlugin.prototype.apply = function(compiler) {
 	// write index
 	compiler.plugin('after-emit', (compilation, callback) => {
 		log(`Emitting -> ${this.options.output.path}`)
-		log(this.DM.ad.get().settings.ref)
+		if (this.DM) {
+			log(this.DM.ad.get().settings.ref)
+		}
 		writeOutput(this.options.output.path, this.output)
 		callback()
 	})
