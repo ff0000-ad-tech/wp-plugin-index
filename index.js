@@ -69,7 +69,7 @@ IndexPlugin.prototype.apply = function(compiler) {
 			})
 			.catch(err => {
 				log(err)
-				callback()
+				callback(err)
 			})
 	})
 
