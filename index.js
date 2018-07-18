@@ -7,6 +7,8 @@ const hooksRegex = require('@ff0000-ad-tech/hooks-regex')
 const debug = require('@ff0000-ad-tech/debug')
 var log = debug('wp-plugin-index')
 
+const pluginName = 'FAT Index Plugin'
+
 const defaultOptions = {
 	inject: {}
 }
@@ -27,14 +29,14 @@ IndexPlugin.prototype.apply = function(compiler) {
 	const self = this
 
 	// add index.html to watchlist
-	compiler.plugin('after-compile', (compilation, callback) => {
+	compiler.hooks.afterCompile.tapAsync(pluginName, (compilation, callback) => {
 		const indexPath = path.resolve(self.options.source.path)
-		compilation.fileDependencies.push(indexPath)
+		compilation.fileDependencies.add(indexPath)
 		callback()
 	})
 
 	// inject & update index
-	compiler.plugin('emit', (compilation, callback) => {
+	compiler.hooks.emit.tapAsync(pluginName, (compilation, callback) => {
 		// load index
 		loadSource(this.options.source.path)
 			.then(output => {
@@ -74,7 +76,7 @@ IndexPlugin.prototype.apply = function(compiler) {
 	})
 
 	// write index
-	compiler.plugin('after-emit', (compilation, callback) => {
+	compiler.hooks.afterEmit.tapAsync(pluginName, (compilation, callback) => {
 		log(`Emitting -> ${this.options.output.path}`)
 		if (this.DM) {
 			log(this.DM.ad.get().settings.ref)
