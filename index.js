@@ -90,29 +90,50 @@ IndexPlugin.prototype.apply = function(compiler) {
  *
  *
  */
-function loadSource(path) {
+function loadSource(target, context) {
 	return new Promise((resolve, reject) => {
-		if (path.indexOf('http') > -1) {
-			// request from internet
-			request.get('https://ae.nflximg.net/monet/scripts/custom-element.js', (err, res, body) => {
+		// request from internet
+		if (target.indexOf('http') > -1) {
+			request.get(target, (err, res, body) => {
 				if (err) {
 					return reject(err)
 				}
 				resolve(body)
 			})
-		} else {
-			// load from filesystem
-			fs.readFile(path, 'utf8', (err, data) => {
+		}
+		// load from filesystem
+		else {
+			if (context) {
+				target = path.resolve(context, target)
+			}
+			fs.readFile(target, 'utf8', (err, data) => {
 				if (err) {
 					return reject(err)
 				}
-				resolve(data)
+				// if target is "package.json", look for "bundle" property from which to load the minified package
+				// this makes it possible to inject a modules whose structure differs between: NPM-installed vs. git cloned, ie. Netflix components
+				if (target.match(/package\.json$/)) {
+					const pkg = JSON.parse(data)
+					if ('bundle' in pkg) {
+						const modulePath = target.replace(/package\.json$/, '')
+						fs.readFile(path.resolve(modulePath, pkg.bundle), 'utf8', (err, data) => {
+							if (err) {
+								return reject(err)
+							}
+							resolve(data)
+						})
+					} else {
+						return reject(new Error('Injection specified a "package.json" which did not include a "bundle" path.'))
+					}
+				} else {
+					resolve(data)
+				}
 			})
 		}
 	})
 }
-function writeOutput(path, source) {
-	fs.writeFileSync(path, source)
+function writeOutput(target, source) {
+	fs.writeFileSync(target, source)
 }
 
 /** -- Inject ----
@@ -125,8 +146,8 @@ function fulfillInjections(injections, source) {
 			return resolve(source)
 		}
 		const name = Object.keys(injections)[0]
-		const path = injections[name]
-		inject(name, path, source)
+		const target = injections[name]
+		inject(name, target, source)
 			.then(output => {
 				delete injections[name]
 				return fulfillInjections(injections, output)
@@ -137,9 +158,9 @@ function fulfillInjections(injections, source) {
 			.catch(err => reject(err))
 	})
 }
-function inject(name, path, source) {
+function inject(name, target, source) {
 	log(` ${name}`)
-	return loadSource(path)
+	return loadSource(target)
 		.then(content => {
 			return source.replace(hooksRegex.get('Red', 'Inject', name), () => content)
 		})
@@ -226,7 +247,7 @@ function loadRequesterContent(requester, context) {
 			reject(new Error(`Unable to parse Requester: "inject('path-to-asset')"`))
 		}
 		log(` ${contentMatch[1]}`)
-		loadSource(path.resolve(context, contentMatch[1]))
+		loadSource(contentMatch[1], context)
 			.then(content => {
 				resolve(content)
 			})
