@@ -115,14 +115,15 @@ function loadSource(target, context) {
 				if (target.match(/package\.json$/)) {
 					const pkg = JSON.parse(data)
 					if ('bundle' in pkg) {
-						fs.readFile(path.resolve(target, pkg.bundle), 'utf8', (err, data) => {
+						const modulePath = target.replace(/package\.json$/, '')
+						fs.readFile(path.resolve(modulePath, pkg.bundle), 'utf8', (err, data) => {
 							if (err) {
 								return reject(err)
 							}
 							resolve(data)
 						})
 					} else {
-						resolve(data)
+						return reject(new Error('Injection specified a "package.json" which did not include a "bundle" path.'))
 					}
 				} else {
 					resolve(data)
