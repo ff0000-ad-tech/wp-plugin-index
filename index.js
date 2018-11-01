@@ -243,7 +243,7 @@ function loadRequesterContent(requester, context) {
 			reject(new Error(`Unable to parse Requester: "inject('path-to-asset')"`))
 		}
 		log(` ${contentMatch[1]}`)
-		loadSource(target.resolve(context, contentMatch[1]))
+		loadSource(path.resolve(context, contentMatch[1]))
 			.then(content => {
 				resolve(content)
 			})
