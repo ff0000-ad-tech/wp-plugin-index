@@ -121,8 +121,9 @@ function loadSource(target) {
 					} else {
 						resolve(data)
 					}
+				} else {
+					resolve(data)
 				}
-				resolve(data)
 			})
 		}
 	})
