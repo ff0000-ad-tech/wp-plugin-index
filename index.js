@@ -90,7 +90,7 @@ IndexPlugin.prototype.apply = function(compiler) {
  *
  *
  */
-function loadSource(target) {
+function loadSource(target, context) {
 	return new Promise((resolve, reject) => {
 		// request from internet
 		if (target.indexOf('http') > -1) {
@@ -103,6 +103,9 @@ function loadSource(target) {
 		}
 		// load from filesystem
 		else {
+			if (context) {
+				target = path.resolve(context, target)
+			}
 			fs.readFile(target, 'utf8', (err, data) => {
 				if (err) {
 					return reject(err)
@@ -243,7 +246,7 @@ function loadRequesterContent(requester, context) {
 			reject(new Error(`Unable to parse Requester: "inject('path-to-asset')"`))
 		}
 		log(` ${contentMatch[1]}`)
-		loadSource(path.resolve(context, contentMatch[1]))
+		loadSource(contentMatch[1], context)
 			.then(content => {
 				resolve(content)
 			})
