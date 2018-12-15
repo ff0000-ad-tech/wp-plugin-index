@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const request = require('request')
+const htmlMinifier = require('html-minifier')
 
 const hooksRegex = require('@ff0000-ad-tech/hooks-regex')
 
@@ -67,6 +68,23 @@ IndexPlugin.prototype.apply = function(compiler) {
 				})
 			})
 			.then(() => {
+				if (!this.DM.deploy.get().output.debug) {
+					this.output = htmlMinifier.minify(this.output, {
+						minifyCSS: true,
+						minifyJS: {
+							compress: {
+								drop_console: true
+							}
+						},
+						removeComments: true,
+						collapseWhitespace: true,
+						caseSensitive: true,
+						keepClosingSlash: true,
+						maxLineLength: 32 * 1024
+					})
+				}
+			})
+			.then(() => {
 				callback()
 			})
 			.catch(err => {
@@ -100,9 +118,8 @@ function loadSource(target, context) {
 				}
 				resolve(body)
 			})
-		}
-		// load from filesystem
-		else {
+		} else {
+			// load from filesystem
 			if (context) {
 				target = path.resolve(context, target)
 			}
