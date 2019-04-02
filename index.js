@@ -73,7 +73,12 @@ IndexPlugin.prototype.apply = function(compiler) {
 						minifyCSS: true,
 						minifyJS: {
 							compress: {
-								drop_console: true
+								drop_console: true,
+								join_vars: false
+							},
+							output: {
+								beautify: false,
+								semicolons: true
 							}
 						},
 						removeComments: true,
