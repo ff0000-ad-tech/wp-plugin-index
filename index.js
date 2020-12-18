@@ -17,7 +17,6 @@ const defaultOptions = {
 function IndexPlugin(DM, options) {
 	this.DM = DM
 	this.options = Object.assign(defaultOptions, options)
-
 	this.updates = [adParams, assets, environments, inline, initial]
 	this.output
 }
@@ -26,7 +25,7 @@ function IndexPlugin(DM, options) {
  *
  *
  */
-IndexPlugin.prototype.apply = function(compiler) {
+IndexPlugin.prototype.apply = function (compiler) {
 	const self = this
 
 	// add index.html to watchlist
@@ -40,14 +39,14 @@ IndexPlugin.prototype.apply = function(compiler) {
 	compiler.hooks.emit.tapAsync(pluginName, (compilation, callback) => {
 		// load index
 		loadSource(this.options.source.path)
-			.then(output => {
+			.then((output) => {
 				this.output = output
 			})
 			.then(() => {
 				// apply injections
 				log('Applying Injections:')
 				const injections = Object.assign({}, self.options.inject)
-				return fulfillInjections(injections, this.output).then(output => {
+				return fulfillInjections(injections, this.output).then((output) => {
 					this.output = output
 				})
 			})
@@ -63,7 +62,7 @@ IndexPlugin.prototype.apply = function(compiler) {
 			.then(() => {
 				log('Applying Requesters:')
 				// apply all requesters
-				return fulfillRequesters(this.output, path.dirname(this.options.source.path)).then(output => {
+				return fulfillRequesters(this.output, path.dirname(this.options.source.path)).then((output) => {
 					this.output = output
 				})
 			})
@@ -92,7 +91,7 @@ IndexPlugin.prototype.apply = function(compiler) {
 			.then(() => {
 				callback()
 			})
-			.catch(err => {
+			.catch((err) => {
 				log(err)
 				callback(err)
 			})
@@ -170,23 +169,23 @@ function fulfillInjections(injections, source) {
 		const name = Object.keys(injections)[0]
 		const target = injections[name]
 		inject(name, target, source)
-			.then(output => {
+			.then((output) => {
 				delete injections[name]
 				return fulfillInjections(injections, output)
 			})
-			.then(output => {
+			.then((output) => {
 				resolve(output)
 			})
-			.catch(err => reject(err))
+			.catch((err) => reject(err))
 	})
 }
 function inject(name, target, source) {
 	log(` ${name}`)
 	return loadSource(target)
-		.then(content => {
+		.then((content) => {
 			return source.replace(hooksRegex.get('Red', 'Inject', name), () => content)
 		})
-		.catch(err => {
+		.catch((err) => {
 			log(`Unable to find Red Hook "Red.Inject.${name}"`)
 			return source
 		})
@@ -246,12 +245,12 @@ function fulfillRequesters(source, context) {
 		const requester = getRequester(source)
 		if (requester) {
 			loadRequesterContent(requester, context)
-				.then(content => {
+				.then((content) => {
 					source = source.replace(hooksRegex.get('Red', 'Requester', requester.groups.param), content)
 					return fulfillRequesters(source, context)
 				})
-				.then(source => resolve(source))
-				.catch(err => reject(err))
+				.then((source) => resolve(source))
+				.catch((err) => reject(err))
 		} else {
 			resolve(source)
 		}
@@ -270,10 +269,10 @@ function loadRequesterContent(requester, context) {
 		}
 		log(` ${contentMatch[1]}`)
 		loadSource(contentMatch[1], context)
-			.then(content => {
+			.then((content) => {
 				resolve(content)
 			})
-			.catch(err => {
+			.catch((err) => {
 				log(`Unable to load Requester: ${requester.groups.content}:\n${err}`)
 				reject(err)
 			})
