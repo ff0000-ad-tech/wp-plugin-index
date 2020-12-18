@@ -21,7 +21,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"@ff0000-ad-tech/debug": "latest",
-		"@ff0000-ad-tech/hooks-regex": "latest",
+		"@ff0000-ad-tech/comment-hooks": "latest",
 		"html-minifier": "^3.5.21",
 		"request": "^2.85.0"
 	},
