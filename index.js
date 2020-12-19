@@ -21,7 +21,7 @@ IndexPlugin.prototype.apply = function (compiler) {
 	const pluginName = 'FAT Index Plugin'
 
 	// add index.html to watchlist
-	compiler.hooks.afterCompile.tapAsync(pluginName, function (compilation, callback) {
+	compiler.hooks.afterCompile.tapAsync(pluginName, (compilation, callback) => {
 		const indexPath = path.resolve(this.options.source.path)
 		compilation.fileDependencies.add(indexPath)
 		callback()
@@ -34,7 +34,7 @@ IndexPlugin.prototype.apply = function (compiler) {
 			const source = await io.loadSource(this.options.source.path)
 
 			// apply requested injections
-			this.output = this.options.injections.reduce(async (acc, injection) => {
+			this.output = await this.options.injections.reduce(async (acc, injection) => {
 				const source = await acc
 				const injectorFunc = injector.getInjectorFunc(injection)
 				return injectorFunc({
@@ -52,6 +52,7 @@ IndexPlugin.prototype.apply = function (compiler) {
 		} catch (err) {
 			log(err)
 		}
+		callback()
 	})
 
 	// write index

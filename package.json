@@ -20,8 +20,9 @@
 	"author": "RED Interactive Agency",
 	"license": "MIT",
 	"dependencies": {
-		"@ff0000-ad-tech/debug": "latest",
 		"@ff0000-ad-tech/comment-hooks": "git+ssh://git@github.com:ff0000-ad-tech/comment-hooks.git#preact",
+		"@ff0000-ad-tech/debug": "latest",
+		"axios": "^0.21.0",
 		"html-minifier": "^3.5.21",
 		"request": "^2.85.0"
 	},
