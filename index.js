@@ -8,10 +8,9 @@ const io = require('./lib/io.js')
 const debug = require('@ff0000-ad-tech/debug')
 var log = debug('wp-plugin-index')
 
-function IndexPlugin(options) {
-	// DM, scope) {
-	this.scope = scope
+function IndexPlugin(DM, scope, options) {
 	this.DM = DM
+	this.scope = scope
 	this.options = options
 
 	this.output
@@ -24,6 +23,7 @@ function IndexPlugin(options) {
 
 IndexPlugin.prototype.apply = function (compiler) {
 	const pluginName = 'FAT Index Plugin'
+
 	// on entry: prepare index watch (happens once)
 	compiler.hooks.entryOption.tap(pluginName, (compilation) => {
 		// init
@@ -48,7 +48,7 @@ IndexPlugin.prototype.apply = function (compiler) {
 			this.DM.adManager.applyIndexSettings(this.scope, this.DM.deploy.get())
 			// update inline-imports
 			watcher.updateInlineImports(compiler)
-			this.prevTimestamps = new Map(compilation.fileTimestamps)
+			watcher.setPrevTimestamps(new Map(compilation.fileTimestamps))
 			return false
 		}
 		return true
@@ -57,14 +57,14 @@ IndexPlugin.prototype.apply = function (compiler) {
 	// on emit: update output
 	compiler.hooks.emit.tapAsync(pluginName, async (compilation, callback) => {
 		// apply injections to index.html
-		this.output = await injector.updateIndex(compilation, this.options.source.path, this.options.injections)
+		this.output = await injector.updateIndex(this.scope, compilation, this.options.source.path, this.options.injections)
 		// optionally minify the index.html
 		if (this.options.output.minify) {
 			log(`Minifying index html`)
 			this.output = minifier(this.output)
 		}
 		// gaurd against watch seeing the index update as a user update
-		this.prevTimestamps = new Map(compilation.fileTimestamps)
+		watcher.setPrevTimestamps(new Map(compilation.fileTimestamps))
 		// return to webpack flow
 		callback()
 	})
@@ -72,9 +72,7 @@ IndexPlugin.prototype.apply = function (compiler) {
 	// after emit: write output to index
 	compiler.hooks.afterEmit.tapAsync(pluginName, (compilation, callback) => {
 		log(`Emitting -> ${this.options.output.path}`)
-		if (this.DM) {
-			log(this.DM.ad.get().settings.ref)
-		}
+		log(this.DM.deploy.get().settings)
 		io.writeOutput(this.options.output.path, this.output)
 		callback()
 	})
