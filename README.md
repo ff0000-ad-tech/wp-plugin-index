@@ -1,8 +1,22 @@
-##### FF0000 Ad Tech
+##### 160over90 - FF0000 Ad Tech
 
 # Webpack Plugin - Index
 
-This plugin injects settings, webpack-bundles, and modules into a target document, in our case `index.html`.
+This plugin serves a number of purposes, all relating to the `index.html`:
+
+1. Watches `index.html` for changes.
+2. Processes settings on `window.adParams` and `window.assets`.
+   - Generates `@size/.inline-imports.js` as our webpack `inline` compile entry. This is usually just the `assets.preloaders` assets.
+3. Injects code into `index.html`, see [Injection Types](#injection-types):
+   - Values, like updated settings, as a result of:
+     - Creative Server settings.
+     - Assets discovered in the compile process.
+   - Webpack Bundles, like:
+     - Inline
+     - Initial
+     - Build
+   - Files, like external scripts.
+4. Minifies `index.html`.
 
 A [comment-based hook pattern](https://github.com/ff0000-ad-tech/comment-hooks) is used to control where these fragments are written.
 
@@ -42,6 +56,8 @@ new IndexPlugin({
 
 ## Injection Types
 
+<a name="injection-types"></a>
+
 ##### Value
 
 This method pipes data known at compile time into the requested hook.
@@ -56,10 +72,4 @@ If a url/filepath has be hardwired in the webpack config, it will be injected in
 
 Otherwise, this method will look in the target document for a hook of the specified name. If a file-match pattern is provided, the "required" url will be loaded and then piped back to the document. A possible implementation of this might look like:
 
-```html
-<script type="text/javascript">
-	/*-- Red.Require.promise_polyfill.start --*/
-	require('./node_modules/promise-polyfill/dist/polyfill.min.js')
-	/*-- Red.Require.promise_polyfill.end --*/
-</script>
-```
+![Require Example](https://github.com/ff0000-ad-tech/wp-plugin-index/tree/master/docs/images/require-example.png)
