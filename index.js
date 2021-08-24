@@ -59,7 +59,7 @@ IndexPlugin.prototype.apply = function (compiler) {
 		// apply injections to index.html
 		this.output = await injector.updateIndex(this.scope, compilation, this.options.source.path, this.options.injections)
 		// optionally minify the index.html
-		if (this.options.output.minify) {
+		if (this.DM.deploy.get().profile.optimize) {
 			log(`Minifying index html`)
 			this.output = minifier(this.output)
 		}
@@ -72,7 +72,7 @@ IndexPlugin.prototype.apply = function (compiler) {
 	// after emit: write output to index
 	compiler.hooks.afterEmit.tapAsync(pluginName, (compilation, callback) => {
 		log(`Emitting -> ${this.options.output.path}`)
-		log(this.DM.deploy.get().settings)
+		log(this.DM.deploy.get())
 		io.writeOutput(this.options.output.path, this.output)
 		callback()
 	})
